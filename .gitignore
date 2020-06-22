@@ -1,0 +1,4 @@
+venv/
+.idea/
+detect_test.py
+save_img/
