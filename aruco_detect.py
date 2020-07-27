@@ -54,15 +54,19 @@ def arucomark(mtx, dist):
             print("ids", ids)
 
             if np.all(ids != None):
-                rvecs, tvecs, objpoint = cv2.aruco.estimatePoseSingleMarkers(coners, 0.05, mtx, dist)
+                rvecs, tvecs, objpoint = cv2.aruco.estimatePoseSingleMarkers(coners, 0.055, mtx, dist)
                 for i in range(0, ids.size):
                     # blue:x, green:y, red:z
                     frame = cv2.aruco.drawAxis(frame, mtx, dist, rvecs[i], tvecs[i], 0.05)
-                    # print(f"distance: {tvecs[i][i][2]*100}cm")
-                    # print(f"angle: {rvecs[i][i][2]*180/math.pi}")
+                    # print(tvecs)
+                    # print(f"distance: {tvecs[i][0][2]*100}cm")
+                    # print(f"angle: {rvecs[i][0][2]*180/math.pi}")
+                    # print(rvecs[i][0][0])
+                    # print(rvecs[i][0][0])
+                    print("rvecs:", rvecs)
+                    print("tvecs:", tvecs)
                 frame = cv2.aruco.drawDetectedMarkers(frame, coners, ids)
                 frame = cv2.aruco.drawDetectedMarkers(frame, point, borderColor=(0, 255, 0))
-                # cv2.imshow("matched", trim_img)
 
 
 
@@ -76,6 +80,7 @@ def arucomark(mtx, dist):
 
 def main():
     mtx , dist = cal()
+    print("Calibration is Completed. Starting tracking marker.")
     arucomark(mtx, dist)
 
 
