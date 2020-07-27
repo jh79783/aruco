@@ -68,10 +68,10 @@ def arucomark(mtx, dist):
                 for i in range(0, ids.size):
                     #ids = np.squeeze(ids)
                     #print(ids)
-                    msg_pub.publish("{} {} {}".format(rvecs[i][i][2], tvecs[i][i][2]*100, ids)) #rvecs:radian, tvecs:distance, ids:aruco marker ID
+                    msg_pub.publish("{} {} {}".format(rvecs[i], tvecs[i], ids)) #rvecs:radian, tvecs:distance, ids:aruco marker ID
                     #msg_pub.publish(f"{tvecs[i][i][2]*100}")
                     frame = cv2.aruco.drawAxis(frame, mtx, dist, rvecs[i], tvecs[i], 0.05)
-               	frame = cv2.aruco.drawDetectedMarkers(frame, coners, ids)
+                frame = cv2.aruco.drawDetectedMarkers(frame, coners, ids)
                 frame = cv2.aruco.drawDetectedMarkers(frame, point, borderColor=(0, 255, 0))
 
             cv2.imshow("result", frame)
@@ -84,7 +84,8 @@ def arucomark(mtx, dist):
 
 def main():
     rospy.init_node("dfdfdf")
-    mtx , dist = cal()
+    mtx, dist = cal()
+    print("Calibration is Completed. Starting tracking marker.")
     arucomark(mtx, dist)
     
 
