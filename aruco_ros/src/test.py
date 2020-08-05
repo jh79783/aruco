@@ -10,6 +10,7 @@ from std_msgs.msg import Float32
 from rospy.numpy_msg import numpy_msg
 
 def cal():
+    rospy.INFO("====================START CAMERA CALIBRATION==========================")
     # termination criteria
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -42,10 +43,12 @@ def cal():
             # cv2.imshow("img", img)
             # cv2.waitKey(500)
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
+    rospy.INFO("====================END CAMERA CALIBRATION==========================")
     return mtx, dist
 
 
 def arucomark(mtx, dist):
+    rospy.INFO("====================START DETECTING==========================")
     rvecs_pub = rospy.Publisher('/rvecs_msg', numpy_msg(Float32Multi), queue_size=10)
     tvecs_pub = rospy.Publisher('/tvecs_msg', numpy_msg(Float32Multi), queue_size=10)
     id_pub = rospy.Publisher('/id_msg',numpy_msg(Float32Multi), queue_size=10)
