@@ -1,8 +1,10 @@
 import cv2
 import glob
+import os
 import numpy as np
 from cv2 import aruco
-import pandas as pd
+import rospy
+from multi_robot.msg import aruco_msgs
 
 aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
 board = aruco.CharucoBoard_create(7, 5, 1, .8, aruco_dict)
@@ -12,7 +14,7 @@ def cal():
     """
     Charuco base pose estimation.
     """
-    print("POSE ESTIMATION STARTS:")
+    rospy.loginfo("POSE ESTIMATION STARTS:")
 
     allCorners = []
     allIds = []
@@ -48,7 +50,7 @@ def calibrate_charuco(allCorners,allIds,imsize):
     """
     Calibrates the camera using the dected corners.
     """
-    print("CAMERA CALIBRATION")
+    rospy.loginfo("CAMERA CALIBRATION")
 
     cameraMatrixInit = np.array([[ 1000.,    0., imsize[0]/2.],
                                  [    0., 1000., imsize[1]/2.],
@@ -69,28 +71,49 @@ def calibrate_charuco(allCorners,allIds,imsize):
                       distCoeffs=distCoeffsInit,
                       flags=flags,
                       criteria=(cv2.TERM_CRITERIA_EPS & cv2.TERM_CRITERIA_COUNT, 10000, 1e-9))
-
+    rospy.loginfo("END CALIBRATION")
     return ret, camera_matrix, distortion_coefficients0, rotation_vectors, translation_vectors
 
 
 def detect_marker(mtx, dist):
-    cam = cv2.VideoCapture(1)
+    rospy.loginfo("START DETECT MARKER")
+    os.system('sudo modprobe bcm2835-v4l2')
+    cam = cv2.VideoCapture(-1)
     param = cv2.aruco.DetectorParameters_create()
+    aruco_pub = rospy.Publisher('aruco_msg', aruco_msgs, queue_size=10)
+    aruco = aruco_msgs()
     if cam.isOpened():
-        while True:
+        while not rospy.is_shutdown:
             _, frame = cam.read()
             gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             coners, ids, point = cv2.aruco.detectMarkers(gray_frame, aruco_dict, parameters=param)
             if np.all(ids != None):
-                rvecs, tvecs, objpoint = cv2.aruco.estimatePoseSingleMarkers(coners, 0.055, mtx, dist)
+                rvecs, tvecs, objpoint = cv2.aruco.estimatePoseSingleMarkers(coners, 0.05, mtx, dist)
                 frame = cv2.aruco.drawAxis(frame, mtx, dist, rvecs[0], tvecs[0], 0.05)
+                rvecs_msg = rvecs.tolist()
+                tvecs_msg = tvecs.tolist()
+                rvecs_msg_x = rvecs_msg[0][0][0]
+                rvecs_msg_y = rvecs_msg[0][0][1]
+                rvecs_msg_z = rvecs_msg[0][0][2]
+                tvecs_msg_x = tvecs_msg[0][0][0]
+                tvecs_msg_y = tvecs_msg[0][0][1]
+                tvecs_msg_z = tvecs_msg[0][0][2]
+                aruco.r_x = rvecs_msg_x
+                aruco.r_y = rvecs_msg_y
+                aruco.r_z = rvecs_msg_z
+                aruco.t_x = tvecs_msg_x
+                aruco.t_y = tvecs_msg_y
+                aruco.t_z = tvecs_msg_z
+                aruco.id = int(ids[i])
+                rospy.loginfo(aruco)
+                aruco_pub.publish(aruco)
             frame = cv2.aruco.drawDetectedMarkers(frame, coners, ids)
-            cv2.imshow("result", frame)
-            k = cv2.waitKey(100)
-            if k == ord('q'):
-                break
-    cam.release()
-    cv2.destroyAllWindows()
+            #cv2.imshow("result", frame)
+            k = cv2.waitKey(33)
+            #if k == ord('q'):
+            #    break
+    #cam.release()
+    #cv2.destroyAllWindows()
 
 
 def main():
